@@ -16,7 +16,7 @@ app.use(morgan(morganOption));
 app.use(helmet());
 app.use(cors());
 
-app.get('/', (req, res) => {
+app.get('/api/*', (req, res) => {
   logger.info('Hello, boilerplate!');
   res.send('Hello, boilerplate!');
 });

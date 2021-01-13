@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const { NODE_ENV, CLIENT_ORIGIN } = require('./config');
 const logger = require('./logger');
+const usersRouter = require('./users/users-router');
 
 const app = express();
 
@@ -17,6 +18,8 @@ app.use(helmet());
 app.use(cors({
   origin: CLIENT_ORIGIN
 }));
+
+app.use('/api/users', usersRouter);
 
 app.get('/api/*', (req, res) => {
   logger.info('Hello, boilerplate!');

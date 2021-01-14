@@ -1,4 +1,4 @@
-const { makeUsersArray } = require('./users-util');
+const { makeUsersArray } = require('./users-test-util');
 const usersService = require('../src/users/users-service');
 
 describe('Users Service Object', () => {

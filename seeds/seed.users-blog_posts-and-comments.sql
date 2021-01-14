@@ -4,14 +4,14 @@ TRUNCATE comments RESTART IDENTITY CASCADE;
 
 INSERT INTO users (username, user_password, email)
   VALUES
-    ('User1', 'password1', 'user1@gmail.com'),
-    ('FakeUser2', 'password2', 'fakeuser2@gmail.com'),
-    ('User3', 'password3', 'user3@gmail.com'),
-    ('User4', 'password4', 'user4@gmail.com'),
-    ('User5', 'password5', 'user5@gmail.com'),
-    ('User6', 'password6', 'user6@gmail.com'),
-    ('User7', 'password7', 'user7@gmail.com'),
-    ('User8', 'password8', 'user8@gmail.com');
+    ('User1', 'password1', 'user1@mailinator.com'),
+    ('FakeUser2', 'password2', 'fakeuser2@mailinator.com'),
+    ('User3', 'password3', 'user3@mailinator.com'),
+    ('User4', 'password4', 'user4@mailinator.com'),
+    ('User5', 'password5', 'user5@mailinator.com'),
+    ('User6', 'password6', 'user6@mailinator.com'),
+    ('User7', 'password7', 'user7@mailinator.com'),
+    ('User8', 'password8', 'user8@mailinator.com');
 
 INSERT INTO blog_posts (title, author_id, content, last_edited)
   VALUES

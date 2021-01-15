@@ -4,14 +4,14 @@ TRUNCATE comments RESTART IDENTITY CASCADE;
 
 INSERT INTO users (username, user_password, email)
   VALUES
-    ('User1', 'password1', 'user1@mailinator.com'),
-    ('FakeUser2', 'password2', 'fakeuser2@mailinator.com'),
-    ('User3', 'password3', 'user3@mailinator.com'),
-    ('User4', 'password4', 'user4@mailinator.com'),
-    ('User5', 'password5', 'user5@mailinator.com'),
-    ('User6', 'password6', 'user6@mailinator.com'),
-    ('User7', 'password7', 'user7@mailinator.com'),
-    ('User8', 'password8', 'user8@mailinator.com');
+    ('User1', '$2b$10$mMGN9vlNqIhp64rfC3Q9a.y7C/5NjG.C2XUBakENtxWyz/gvhT1Fu', 'user1@mailinator.com'),
+    ('FakeUser2', '$2b$10$0d0are99yJRtpD6G6JBAnOqrG3eoivo5..xe1xnqKFzeH2A4XsANm', 'fakeuser2@mailinator.com'),
+    ('User3', '$2b$10$Pq0GUQHGB0GVX8E/MzkcZOmWjC0u4RTtt0pEwz2iX92Rkr.vxsvwm', 'user3@mailinator.com'),
+    ('User4', '$2b$10$tDnWSIaugdM.zFtyliOlR.lTx5mAjBQ/Bx8KRrUkg50kR3gh9VKIa', 'user4@mailinator.com'),
+    ('User5', '$2b$10$w2RlB6a7Q4esgINaMQMKxO.cb7e39XNvrGbgdREp0uJ0Kd2RqcwZ.', 'user5@mailinator.com'),
+    ('User6', '$2b$10$nPh/MG54nRB1Fta87KRWO.jU2Rco8gUWDDz79gFIrP.tkhrFfduI2', 'user6@mailinator.com'),
+    ('User7', '$2b$10$qQQEEm7B672p7.qhrpFF4uVPk2uT/5Nhc7AOybh9BXiFHTbc5osv.', 'user7@mailinator.com'),
+    ('User8', '$2b$10$EWY426H2CKH3Ft3jpLxHku7eUK9zIP5lPLiS1K19F.6PqlSQ/F64q', 'user8@mailinator.com');
 
 INSERT INTO blog_posts (title, author_id, content, last_edited)
   VALUES

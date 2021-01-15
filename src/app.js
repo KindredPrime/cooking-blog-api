@@ -28,17 +28,12 @@ app.use(cors({
 
 app.use('/api/users', usersRouter);
 
-app.get('/api/*', (req, res) => {
-  logger.info('Hello, boilerplate!');
-  res.send('Hello, boilerplate!');
-});
-
 app.use(function errorHandler(error, req, res, next) {
   let response;
   if (NODE_ENV === 'production') {
     response = { error: { message: 'server error' } };
   } else {
-    console.error(error);
+    logger.error(error);
     response = { message: error.message, stack: error.stack };
   }
   res.status(500).json(response);

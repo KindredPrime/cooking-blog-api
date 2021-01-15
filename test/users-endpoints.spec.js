@@ -69,7 +69,7 @@ describe('Users Endpoints', () => {
     });
   });
 
-  describe.only('POST /api/users/', () => {
+  describe('POST /api/users/', () => {
     it(`Responds with 201 and the new user, and adds it to the 'users' table`, () => {
       const newUser = {
         username: 'NewUser',
@@ -183,6 +183,73 @@ describe('Users Endpoints', () => {
         .post(`/api/users/`)
         .send(newUser)
         .expect(400, { message: `'email' must have a valid domain` });
+    });
+  });
+
+  describe('POST /api/users/login', () => {
+    const invalidMessage = `The provided username and password combination is invalid`;
+
+    context('Given no users', () => {
+      // same result as the user providing the wrong username
+      it(`Responds with 404 and an error message`, () => {
+        const user = testUsers[0];
+        const body = {
+          username: user.username,
+          user_password: user.user_password
+        };
+
+        return supertest(app)
+          .post(`/api/users/login`)
+          .send(body)
+          .expect(404, { message: invalidMessage });
+      });
+    });
+
+    context('Given the table has users', () => {
+      beforeEach(`Populate the 'users' table, using the API`, () => {
+        const user = testUsers[0];
+        return supertest(app)
+          .post(`/api/users/`)
+          .send({
+            username: user.username,
+            user_password: user.user_password,
+            email: user.email
+          });
+      });
+
+      it(
+        `Responds with 201, the user token, and the user's id when given a correct username and password`,
+        () => {
+          const id = 1;
+          const user = testUsers[id-1];
+          const body = {
+            username: user.username,
+            user_password: user.user_password
+          };
+
+          return supertest(app)
+            .post(`/api/users/login`)
+            .send(body)
+            .expect(201)
+            .then((result) => {
+              expect(result.body).to.have.property('token');
+              expect(result.body.id).to.eql(id);
+            });
+        });
+
+        it(`Responds with 401 and an error message when the password is incorrect`, () => {
+          const id = 1;
+          const user = testUsers[id-1];
+          const body = {
+            username: user.username,
+            user_password: `${user.user_password}1`
+          };
+
+          return supertest(app)
+            .post(`/api/users/login`)
+            .send(body)
+            .expect(401, { message: invalidMessage });
+        });
     });
   });
 });

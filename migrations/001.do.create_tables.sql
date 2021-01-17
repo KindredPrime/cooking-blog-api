@@ -14,7 +14,7 @@ CREATE TABLE blog_posts (
   title TEXT NOT NULL,
   author_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
   content TEXT NOT NULL,
-  last_edited TIMESTAMP NOT NULL DEFAULT NOW()
+  last_edited TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE comments (
@@ -22,5 +22,5 @@ CREATE TABLE comments (
   content TEXT NOT NULL,
   creator_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   post_id INTEGER REFERENCES blog_posts(id) ON DELETE CASCADE NOT NULL,
-  last_edited TIMESTAMP NOT NULL DEFAULT NOW()
+  last_edited TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

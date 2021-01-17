@@ -12,6 +12,12 @@ const validateString = (fieldName) => (fieldValue) => {
   }
 };
 
+const validateNumber = (fieldName) => (fieldValue) => {
+  if (typeof fieldValue !== 'number') {
+    return `'${fieldName}' must be a number`;
+  }
+};
+
 /**
  * Validates fields of the provided entity, and returns the error of the first invalid field.
  * Returns null if all fields are valid
@@ -99,35 +105,26 @@ const validateUserPost = async (newUser) => {
   }
 
   return null;
-}
+};
 
-// Validates the fields in a PATCH request for Organizations
-/*const validateOrganizationPatch = (newFields) => {
-  const errors = [];
-
-  // check if any fields are provided
-  const numFields = Object.values(newFields).filter(Boolean).length;
-  if (numFields === 0) {
-    errors.push(`Request body must include 'org_name', 'website', 'phone', 'email', ` +
-    `'org_address', 'org_desc', or 'causes'`);
-    return errors;
+/**
+ * Validates the fields in the body of a POST request for blog posts. Returns the error of the first
+ * invalid field.  Returns null if all fields are valid.
+ */
+const validateBlogPostPost = (newBlogPost) => {
+  const validateError = validate([
+    ['title', [validateRequired, validateString]],
+    ['author_id', [validateRequired, validateNumber]],
+    ['content', [validateRequired, validateString]]
+  ])(newBlogPost);
+  if (validateError) {
+    return validateError;
   }
 
-  // call validate method
-  errors.push(...validate([
-    ['org_name', [validateString]],
-    ['website', [validateString]],
-    ['phone', [validateString]],
-    ['email', [validateString]],
-    ['org_address', [validateString]],
-    ['org_desc', [validateString]],
-    ['causes', [validateCauses]]
-  ])(newFields));
-
-  return errors;
-}*/
+  return null;
+};
 
 module.exports = {
   validateUserPost,
-  //validateOrganizationPatch
+  validateBlogPostPost
 };

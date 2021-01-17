@@ -1,12 +1,15 @@
 const blogPostsService = {
-  getAllBlogPosts(db) {
-    return db.select('*').from('blog_posts');
-  },
-  getBlogPostsByAuthor(db, author_id) {
-    return this.getAllBlogPosts(db).where({ author_id });
+  getAllBlogPosts(db, author_id) {
+    const q = db.select('*').from('blog_posts');
+
+    if (author_id) {
+      return q.where({ author_id });
+    }
+
+    return q;
   },
   getBlogPostById(db, id) {
-    return this.getAllBlogPosts(db).where({ id }).first();
+    return blogPostsService.getAllBlogPosts(db).where({ id }).first();
   },
   // Return the blog post along with it's author's username
   getFullBlogPostById(db, id) {
@@ -24,7 +27,7 @@ const blogPostsService = {
       .where({ 'blog_posts.id': id })
       .first();
   },
-  createBlogPost(db, newBlogPost) {
+  insertBlogPost(db, newBlogPost) {
     return db.insert(newBlogPost).into('blog_posts').returning('*')
       .then((results) => results[0]);
   },
@@ -38,7 +41,7 @@ const blogPostsService = {
   updateFullBlogPost(db, id, updatedFields) {
     const { title, author_id, content } = updatedFields;
 
-    return this.getFullBlogPostById(db, id)
+    return blogPostsService.getFullBlogPostById(db, id)
       .then((result) => {
         if (
           result.title === title
@@ -52,15 +55,49 @@ const blogPostsService = {
           title,
           author_id,
           content,
-          last_edited: new Date()
+          last_edited: new Date().toISOString()
         };
-        return this.getBlogPostById(db, id).update(updatedBlogFields)
-          .then(() => this.getFullBlogPostById(db, id));
+        return blogPostsService.getBlogPostById(db, id).update(updatedBlogFields)
+          .then(() => blogPostsService.getFullBlogPostById(db, id));
       })
   },
   deleteBlogPost(db, id) {
-    return this.getBlogPostById(db, id).delete();
+    return blogPostsService.getBlogPostById(db, id).del();
   }
 };
 
-module.exports = blogPostsService;
+function convertTime(blogPost) {
+  if (!blogPost || !blogPost.last_edited) {
+    return blogPost;
+  }
+
+  return {
+    ...blogPost,
+    last_edited: blogPost.last_edited.toISOString()
+  };
+}
+
+// see BookmarksService if I get stuck converting this to a function that applies the then to all blogPostsService functions
+/*function addFunction(func) {
+  return (...args) => func(...args).then((results) => results.map((result) => convertTime(result)));
+}*/
+
+function addTailFunction(service, tailFunc) {
+  const newService = { ...service };
+  for(const funcName in newService) {
+    const f = newService[funcName];
+    newService[funcName] = (...args) => f(...args).then((results) => {
+      if (Array.isArray(results)) {
+        return results.map(tailFunc);
+      }
+
+      return tailFunc(results);
+    });
+  }
+
+  return newService;
+}
+
+module.exports = {
+  ...addTailFunction(blogPostsService, convertTime)
+};

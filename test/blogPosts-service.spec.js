@@ -36,17 +36,16 @@ describe('Blog Posts Service Object', () => {
         });
     });
 
-    it('getBlogPostsByAuthor() returns an empty array', () => {
-      const id = 1;
-      const authorId = testBlogPosts[id-1].author_id;
-      return blogPostsService.getBlogPostsByAuthor(db, authorId)
+    it('getAllBlogPosts() returns an empty array when given an author id', () => {
+      const authorId = testBlogPosts[0].author_id;
+      return blogPostsService.getAllBlogPosts(db, authorId)
         .then((results) => {
           expect(results).to.eql([]);
         });
     });
 
     it(
-      `createBlogPost() adds the blog post to the 'blog_posts' table and returns the new blog post`,
+      `insertBlogPost() adds the blog post to the 'blog_posts' table and returns the new blog post`,
       () => {
         const testAuthorId = testUsers[0].id;
         const newBlogPost = {
@@ -56,7 +55,7 @@ describe('Blog Posts Service Object', () => {
         };
 
         let postResult;
-        return blogPostsService.createBlogPost(db, newBlogPost)
+        return blogPostsService.insertBlogPost(db, newBlogPost)
           .then((result) => {
             postResult = result;
             const { id, title, author_id, content } = result;
@@ -92,10 +91,9 @@ describe('Blog Posts Service Object', () => {
         });
     });
 
-    it('getBlogPostsByAuthor() returns all the blog posts with the author_id', () => {
-      const id = 1;
-      const authorId = testBlogPosts[id-1].author_id;
-      return blogPostsService.getBlogPostsByAuthor(db, authorId)
+    it('getAllBlogPosts() returns all the blog posts with the author_id', () => {
+      const authorId = testBlogPosts[0].author_id;
+      return blogPostsService.getAllBlogPosts(db, authorId)
         .then((results) => {
           expect(results).to.eql(testBlogPosts.filter((post) => post.author_id === authorId));
         });
@@ -145,7 +143,7 @@ describe('Blog Posts Service Object', () => {
             expect(author_id).to.eql(updatedFields.author_id);
             expect(author_username).to.eql(newAuthor.username);
             expect(content).to.eql(updatedFields.content);
-            expect(last_edited.valueOf()).is.above(origLastEdited.valueOf());
+            expect(new Date(last_edited).valueOf()).is.above(new Date(origLastEdited).valueOf());
           })
           .then(() => blogPostsService.getBlogPostById(db, origBlogPost.id))
           .then((result) => {

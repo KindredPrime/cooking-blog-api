@@ -2,7 +2,7 @@ const express = require('express');
 const xss = require('xss');
 const blogPostsService = require('./blogPosts-service');
 const logger = require('../logger');
-const { validateBlogPostPost } = require('../util');
+const { requireLogin, validateBlogPostPost } = require('../util');
 
 const blogPostsRouter = express.Router();
 const bodyParser = express.json();
@@ -27,7 +27,7 @@ blogPostsRouter.route('/')
       })
       .catch(next);
   })
-  .post(bodyParser, (req, res, next) => {
+  .post(requireLogin, bodyParser, (req, res, next) => {
     const { title, author_id, content } = req.body;
     const newBlogPost = { title, author_id, content };
 

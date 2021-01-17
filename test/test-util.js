@@ -11,6 +11,7 @@
  *  expected validation error
  * @param {Object} entity - The data entity to invalidate for each test case
  * @param {Function} invalidator - A function that invalidates the entity to test validation errors
+ * @param {string} token - used to verify a user is logged in
  */
 function testValidationFields(
   app,
@@ -20,7 +21,8 @@ function testValidationFields(
   pathCreator,
   validationFieldErrors,
   entity,
-  invalidator) {
+  invalidator,
+  token) {
     const id = 1;
 
     for(const [validationFieldName, fieldError] of Object.entries(validationFieldErrors)) {
@@ -32,6 +34,7 @@ function testValidationFields(
           invalidEntity = invalidator(invalidEntity, validationFieldName);
 
           return supertest(app)[method](pathCreator(id))
+            .set('Authorization', `Bearer ${token}`)
             .send(invalidEntity)
             .expect(400, { message: fieldError });
         });

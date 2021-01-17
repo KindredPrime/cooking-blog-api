@@ -159,6 +159,7 @@ describe('Blog Posts Endpoints', () => {
       const expectedLocation = `/api/blog-posts/${expectedBlogPost.id}`;
       return supertest(app)
         .post(`/api/blog-posts/`)
+        .set('Authorization', `Bearer ${testToken}`)
         .send(newBlogPost)
         .expect(201)
         .expect((result) => {
@@ -175,6 +176,19 @@ describe('Blog Posts Endpoints', () => {
         });
     });
 
+    it(`Responds with 401 and an error message when no user testToken is provided in the request`, () => {
+      const newBlogPost = {
+        title: 'New Title',
+        author_id: testBlogPosts[0].author_id,
+        content: 'New content'
+      };
+
+      return supertest(app)
+        .post(`/api/blog-posts/`)
+        .send(newBlogPost)
+        .expect(401, { message: `The request must have an 'Authorization' header` });
+    });
+
     context('Given XSS content', () => {
       // Note: the last_edited in maliciousBlogPost will be ignored when POSTing it, and the response from the POST will have its last_edited set to a current timestamp
       let { maliciousBlogPost, sanitizedBlogPost } = makeMaliciousBlogPost();
@@ -189,6 +203,7 @@ describe('Blog Posts Endpoints', () => {
           const expectedLocation = `/api/blog-posts/${sanitizedBlogPost.id}`;
           return supertest(app)
             .post(`/api/blog-posts/`)
+            .set('Authorization', `Bearer ${testToken}`)
             .send(maliciousBlogPost)
             .expect(201)
             .expect((result) => {
@@ -235,7 +250,8 @@ describe('Blog Posts Endpoints', () => {
       (user, fieldName) => {
         delete user[fieldName];
         return user;
-      }
+      },
+      testToken
     );
 
     // Expected validation errors for required fields
@@ -254,7 +270,8 @@ describe('Blog Posts Endpoints', () => {
       (user, fieldName) => {
         user[fieldName] = 6;
         return user;
-      }
+      },
+      testToken
     );
 
     // Expected validation errors for required fields
@@ -272,7 +289,8 @@ describe('Blog Posts Endpoints', () => {
       (user, fieldName) => {
         user[fieldName] = 'text';
         return user;
-      }
+      },
+      testToken
     );
   });
 });

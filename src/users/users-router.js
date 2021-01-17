@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const usersService = require('./users-service');
 const { validateUserPost } = require('../util');
 const logger = require('../logger');
-const { SALT_ROUNDS, PRIVATE_KEY } = require('../config');
+const { SALT_ROUNDS, SECRET_KEY } = require('../config');
 
 const usersRouter = express.Router();
 const bodyParser = express.json();
@@ -107,7 +107,7 @@ usersRouter.route('/login')
             .json({ message: invalidMessage });
         }
 
-        const token = jwt.sign({ id }, PRIVATE_KEY);
+        const token = jwt.sign({ id }, SECRET_KEY);
         return res
           .status(201)
           .json({

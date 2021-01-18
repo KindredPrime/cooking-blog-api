@@ -128,6 +128,18 @@ const validateBlogPostPost = (newBlogPost) => {
 };
 
 /**
+ * Validates the fields in the body of a POST request for comments. Returns the error of the first
+ * invalid field.  Returns null if all fields are valid.
+ */
+const validateCommentPost = (newComment) => {
+  return validate([
+    ['content', [validateRequired, validateString]],
+    ['creator_id', [validateRequired, validateNumber]],
+    ['post_id', [validateRequired, validateNumber]],
+  ])(newComment);
+}
+
+/**
  * Authenticates the user
  *
  * @param {Object} req - HTTP request from a client
@@ -214,6 +226,7 @@ function addTailFunction(service, tailFunc, excludedFunctions=[]) {
 module.exports = {
   validateUserPost,
   validateBlogPostPost,
+  validateCommentPost,
   requireLogin,
   convertTimestamp,
   addTailFunction

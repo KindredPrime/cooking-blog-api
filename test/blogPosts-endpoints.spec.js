@@ -176,7 +176,7 @@ describe('Blog Posts Endpoints', () => {
         });
     });
 
-    it(`Responds with 401 and an error message when no user testToken is provided in the request`, () => {
+    it(`Responds with 401 and an error message when no user token is provided in the request`, () => {
       const newBlogPost = {
         title: 'New Title',
         author_id: testBlogPosts[0].author_id,

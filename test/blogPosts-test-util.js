@@ -5,14 +5,14 @@ function makeBlogPostsArray() {
       title: 'Lessons I Learned from Cooking',
       author_id: 2,
       content: `Have patience, it can be fun to experiment and explore, having a hard time learning something may only be temporary, bringing an idea of yours to life by creating it from scratch without relying on any instructions can be fun and rewarding, the meals you cook don't have to be fancy or difficult to taste good.`,
-      last_edited: '2020-12-17T07:37:16.000Z'//new Date('Thurs Dec 17 07:37:16 2020')
+      last_edited: '2020-12-17T07:37:16.000Z'
     },
     {
       id: 2,
       title: 'How to Save Money When Cooking',
       author_id: 1,
       content: 'Buy in bulk, cook in bulk and freeze the leftovers, but store brand products.',
-      last_edited: '2020-12-28T18:24:43.000Z'//new Date('Mon Dec 28 18:24:43 2020')
+      last_edited: '2020-12-28T18:24:43.000Z'
     },
     {
       id: 3,
@@ -23,7 +23,7 @@ function makeBlogPostsArray() {
       3. Start small with seasonings
       4. Cook
       5. Blah`,
-      last_edited: '2020-12-01T12:54:31.000Z'//new Date('Tues Dec 1 12:54:31 2020')
+      last_edited: '2020-12-01T12:54:31.000Z'
     }
   ];
 }

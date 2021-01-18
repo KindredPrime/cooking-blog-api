@@ -174,8 +174,47 @@ const requireLogin = (req, res, next) => {
     .catch(next);
 };
 
+function convertTimestamp(entity) {
+  if (!entity || !entity.last_edited) {
+    return entity;
+  }
+
+  return {
+    ...entity,
+    last_edited: entity.last_edited.toISOString()
+  };
+}
+
+/**
+ * Create a new service where each of the original service's functions have another function run after them
+ *
+ * @param {Object} service
+ * @param {Function} tailFunc - the function to add to the end of each function
+ * @param {Array} excludedFunctions - a list of functions to NOT apply the tailFunc to
+ */
+function addTailFunction(service, tailFunc, excludedFunctions=[]) {
+  const newService = { ...service };
+  for(const funcName in newService) {
+    // Skip functions that are excluded
+    if (!excludedFunctions.includes(funcName)) {
+      const f = newService[funcName];
+      newService[funcName] = (...args) => f(...args).then((results) => {
+        if (Array.isArray(results)) {
+          return results.map(tailFunc);
+        }
+
+        return tailFunc(results);
+      });
+    }
+  }
+
+  return newService;
+}
+
 module.exports = {
   validateUserPost,
   validateBlogPostPost,
-  requireLogin
+  requireLogin,
+  convertTimestamp,
+  addTailFunction
 };

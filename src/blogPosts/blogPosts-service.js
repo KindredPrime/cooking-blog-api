@@ -1,3 +1,5 @@
+const { convertTimestamp, addTailFunction } = require('../util');
+
 const blogPostsService = {
   getAllBlogPosts(db, author_id) {
     const q = db.select('*').from('blog_posts');
@@ -32,7 +34,7 @@ const blogPostsService = {
       .then((results) => results[0]);
   },
   /*
-    Update the blog post with the id, using the provided fields, and give it's last_edited field a
+    Update the blog post with the id, using the provided fields, and give its last_edited field a
     current timestamp.  Then return the updated blog post, along with it's author's username.
 
     If none of the provided fields are different from the blog post to be updated, then nothing
@@ -66,38 +68,6 @@ const blogPostsService = {
   }
 };
 
-function convertTime(blogPost) {
-  if (!blogPost || !blogPost.last_edited) {
-    return blogPost;
-  }
-
-  return {
-    ...blogPost,
-    last_edited: blogPost.last_edited.toISOString()
-  };
-}
-
-// see BookmarksService if I get stuck converting this to a function that applies the then to all blogPostsService functions
-/*function addFunction(func) {
-  return (...args) => func(...args).then((results) => results.map((result) => convertTime(result)));
-}*/
-
-function addTailFunction(service, tailFunc) {
-  const newService = { ...service };
-  for(const funcName in newService) {
-    const f = newService[funcName];
-    newService[funcName] = (...args) => f(...args).then((results) => {
-      if (Array.isArray(results)) {
-        return results.map(tailFunc);
-      }
-
-      return tailFunc(results);
-    });
-  }
-
-  return newService;
-}
-
 module.exports = {
-  ...addTailFunction(blogPostsService, convertTime)
+  ...addTailFunction(blogPostsService, convertTimestamp)
 };

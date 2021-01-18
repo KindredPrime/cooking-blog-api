@@ -7,7 +7,7 @@ const {
   gotExpectedComment
 } = require('./comments-test-util');
 
-describe.only('Comments Service Object', () => {
+describe('Comments Service Object', () => {
   let db;
   before('Connect to database', () => {
     db = knex({

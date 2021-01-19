@@ -131,6 +131,16 @@ function makeFullCommentsArray() {
   });
 }
 
+function updateIdSequence(db, table) {
+  return db
+    .raw(`
+      SELECT setval(
+        pg_get_serial_sequence('${table}', 'id'),
+        max(id))
+      FROM ${table}
+    `);
+}
+
 module.exports = {
   testValidationFields,
   makeFullUsersArray,
@@ -138,4 +148,5 @@ module.exports = {
   makeFullBlogPostsArray,
   makeMaliciousFullBlogPost,
   makeFullCommentsArray,
+  updateIdSequence
 };

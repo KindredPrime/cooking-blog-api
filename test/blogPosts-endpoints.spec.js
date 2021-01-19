@@ -11,7 +11,8 @@ const {
 const {
   testValidationFields,
   makeFullBlogPostsArray,
-  makeMaliciousFullBlogPost
+  makeMaliciousFullBlogPost,
+  updateIdSequence
 } = require('./test-util');
 
 describe('Blog Posts Endpoints', () => {
@@ -203,6 +204,28 @@ describe('Blog Posts Endpoints', () => {
         .send(newBlogPost)
         .expect(401, { message: `The request must have an 'Authorization' header` });
     });
+
+    it(
+      `Responds with 400 and an error message when a blog post with the title already exists for the user`,
+      () => {
+        return db
+          .insert(testBlogPosts)
+          .into('blog_posts')
+          .then(() => updateIdSequence(db, 'blog_posts'))
+          .then(() => {
+            const newBlogPost = {
+              title: testBlogPosts[0].title,
+              author_id: testBlogPosts[0].author_id,
+              content: `New content`
+            };
+
+            return supertest(app)
+              .post('/api/blog-posts')
+              .set('Authorization', authHeader)
+              .send(newBlogPost)
+              .expect(400, { message: `User has already written a blog post with the title ${newBlogPost.title}` });
+          });
+      });
 
     context('Given XSS content', () => {
       it(

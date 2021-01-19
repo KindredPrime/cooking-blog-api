@@ -32,8 +32,31 @@ blogPostsRouter.route('/')
         .json({ message: error });
     }
 
-    return blogPostsService.insertBlogPost(req.app.get('db'), newBlogPost)
+    let titleAlreadyExists = false;
+    return blogPostsService.getAllBlogPosts(req.app.get('db'), author_id)
+      .then((results) => {
+        if (results.find((post) => post.title === title)) {
+          titleAlreadyExists = true;
+          const message = `User has already written a blog post with the title ${title}`;
+          logger.error(message);
+
+          return res
+            .status(400)
+            .json({ message });
+        }
+      })
+      .then(() => {
+        if (titleAlreadyExists) {
+          return;
+        }
+
+        return blogPostsService.insertBlogPost(req.app.get('db'), newBlogPost);
+      })
       .then((result) => {
+        if (titleAlreadyExists) {
+          return;
+        }
+
         return res
           .status(201)
           .location(`/api/blog-posts/${result.id}`)

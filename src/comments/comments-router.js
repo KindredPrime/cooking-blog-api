@@ -49,19 +49,41 @@ commentsRouter.route('/')
   });
 
 commentsRouter.route('/:id')
-  .get((req, res, next) => {
+  .all((req, res, next) => {
     const { id } = req.params;
+
     return commentsService.getCommentById(req.app.get('db'), id)
-      .then((comment) => {
-        if (!comment) {
+      .then((result) => {
+        if (!result) {
           return res
             .status(404)
-            .json({ message: `There is no comment with id ${id}`});
+            .json({ message: `There is no comment with id ${id}` });
         }
 
-        return res.json(sanitizeComment(comment));
+        req.comment = result;
+        next();
       })
       .catch(next);
   })
+  .get((req, res, next) => {
+    return res.json(sanitizeComment(req.comment));
+  })
+  .delete(requireLogin, (req, res, next) => {
+    const { id } = req.params;
+
+    if (req.user.id !== req.comment.creator_id) {
+      return res
+        .status(403)
+        .json({ message: `User is unauthorized to delete the comment with id ${id}` });
+    }
+
+    return commentsService.deleteComment(req.app.get('db'), id)
+      .then(() => {
+        return res
+          .status(204)
+          .end();
+      })
+      .catch(next);
+  });
 
 module.exports = commentsRouter;

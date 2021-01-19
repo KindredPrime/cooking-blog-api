@@ -43,7 +43,7 @@ blogPostsRouter.route('/')
   });
 
 blogPostsRouter.route('/:id')
-  .get((req, res, next) => {
+  .all((req, res, next) => {
     const { id } = req.params;
 
     return blogPostsService.getFullBlogPostById(req.app.get('db'), id)
@@ -54,7 +54,28 @@ blogPostsRouter.route('/:id')
             .json({ message: `There is no blog post with id ${id}` });
         }
 
-        return res.json(sanitizeFullBlogPost(result));
+        req.blogPost = result;
+        next();
+      })
+      .catch(next);
+  })
+  .get((req, res, next) => {
+    return res.json(sanitizeFullBlogPost(req.blogPost));
+  })
+  .delete(requireLogin, (req, res, next) => {
+    const { id } = req.params;
+
+    if (req.user.id !== req.blogPost.author_id) {
+      return res
+        .status(403)
+        .json({ message: `User is unauthorized to delete the blog post with id ${id}` });
+    }
+
+    return blogPostsService.deleteBlogPost(req.app.get('db'), id)
+      .then(() => {
+        return res
+          .status(204)
+          .end();
       })
       .catch(next);
   });

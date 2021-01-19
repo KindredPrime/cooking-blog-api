@@ -41,6 +41,9 @@ describe('Blog Posts Endpoints', () => {
   const { maliciousBlogPost, sanitizedBlogPost } = makeMaliciousBlogPost();
   const { maliciousFullBlogPost, sanitizedFullBlogPost } = makeMaliciousFullBlogPost();
 
+  // testToken is initialized in setup.js for the user with id 1
+  const authHeader = `Bearer ${testToken}`
+
   describe('GET /blog-posts', () => {
     context('Given no blog posts', () => {
       it('Responds with 200 and an empty array', () => {
@@ -297,5 +300,69 @@ describe('Blog Posts Endpoints', () => {
       },
       testToken
     );
+  });
+
+  describe('DELETE /api/blog-posts/:id', () => {
+    context('Given no blog posts in database', () => {
+      it(`Responds with 404 and an error message`, () => {
+        const id = 1000;
+        return supertest(app)
+          .delete(`/api/blog-posts/${id}`)
+          .expect(404, { message: `There is no blog post with id ${id}` });
+      });
+    });
+
+    context('Given the database has blog posts', () => {
+      beforeEach(`Populate 'users' and 'blog_posts' tables`, () => {
+        return db
+          .insert(testUsers)
+          .into('users')
+          .then(() => {
+            return db
+              .insert(testBlogPosts)
+              .into('blog_posts');
+          });
+      });
+
+      it(`Responds with 204 and removes the blog post from the database`, () => {
+        // find a blog post written by the same user as the token in the auth header
+        const blogPostId = testBlogPosts.find((post) => post.author_id === 1).id;
+
+        return supertest(app)
+          .delete(`/api/blog-posts/${blogPostId}`)
+          .set('Authorization', authHeader)
+          .expect(204)
+          .then(() => {
+            return supertest(app)
+              .get('/api/blog-posts/')
+              .expect(200, testBlogPosts.filter((post) => post.id !== blogPostId));
+          });
+      });
+
+      it(
+        `Responds with 401 and an error message when no user token is provided in the request`,
+        () => {
+          const id = testBlogPosts[0].id;
+
+          return supertest(app)
+            .delete(`/api/blog-posts/${id}`)
+            .expect(401, { message: `The request must have an 'Authorization' header` });
+        });
+
+      it(
+        `Responds with 403 and an error message when the logged-in user is not the blog post's author`,
+        () => {
+          // find a blog post written by a different user from the token in the auth header
+          const blogPostId = testBlogPosts.find((post) => post.author_id !== 1).id;
+
+          return supertest(app)
+            .delete(`/api/blog-posts/${blogPostId}`)
+            .set('Authorization', authHeader)
+            .expect(
+              403,
+              { message: `User is unauthorized to delete the blog post with id ${blogPostId}` }
+            );
+        });
+    });
   });
 });

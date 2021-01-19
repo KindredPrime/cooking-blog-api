@@ -68,6 +68,9 @@ const commentsService = {
         return commentsService.getCommentById(db, id).update(updatedCommentFields).returning('*')
           .then((results) => results[0]);
       });
+  },
+  deleteComment(db, id) {
+    return commentsService.getCommentById(db, id).del();
   }
 };
 

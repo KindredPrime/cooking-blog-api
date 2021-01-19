@@ -40,7 +40,7 @@ describe('Comments Endpoints', () => {
     sanitizedFullComment
   } = makeMaliciousComment();
 
-  // testToken can be found in setup.js
+  // testToken is initialized in setup.js for the user with id 1
   const authHeader = `Bearer ${testToken}`;
 
   describe(`GET /api/comments/`, () => {
@@ -70,14 +70,14 @@ describe('Comments Endpoints', () => {
       });
 
       it(
-        `Responds with 200 and all full comments (includes their creator's username and blog post's title)`,
+        `Responds with 200 and all full comments (includes their creator's username and comment's title)`,
         () => {
           return supertest(app)
             .get('/api/comments/')
             .expect(200, testFullComments);
         });
 
-      it(`Responds with 200 and all full comments that match a given blog post id`, () => {
+      it(`Responds with 200 and all full comments that match a given comment id`, () => {
         const blogPostId = testBlogPosts[0].id;
         return supertest(app)
           .get('/api/comments')
@@ -329,5 +329,74 @@ describe('Comments Endpoints', () => {
       },
       testToken
     );
+  });
+
+  describe('DELETE /api/comments/:id', () => {
+    context('Given no comments in database', () => {
+      it(`Responds with 404 and an error message`, () => {
+        const id = 1000;
+        return supertest(app)
+          .delete(`/api/comments/${id}`)
+          .expect(404, { message: `There is no comment with id ${id}` });
+      });
+    });
+
+    context('Given the database has comments', () => {
+      beforeEach(`Populate 'users', 'blog_posts', and 'comments' tables`, () => {
+        return db
+          .insert(testUsers)
+          .into('users')
+          .then(() => {
+            return db
+              .insert(testBlogPosts)
+              .into('blog_posts')
+              .then(() => {
+                return db
+                  .insert(testComments)
+                  .into('comments');
+              });
+          });
+      });
+
+      it(`Responds with 204 and removes the comment from the database`, () => {
+        // find a comment written by the same user as the token in the auth header
+        const commentId = testComments.find((comment) => comment.creator_id === 1).id;
+
+        return supertest(app)
+          .delete(`/api/comments/${commentId}`)
+          .set('Authorization', authHeader)
+          .expect(204)
+          .then(() => {
+            return supertest(app)
+              .get('/api/comments/')
+              .expect(200, testFullComments.filter((comment) => comment.id !== commentId));
+          });
+      });
+
+      it(
+        `Responds with 401 and an error message when no user token is provided in the request`,
+        () => {
+          const id = testComments[0].id;
+
+          return supertest(app)
+            .delete(`/api/comments/${id}`)
+            .expect(401, { message: `The request must have an 'Authorization' header` });
+        });
+
+      it(
+        `Responds with 403 and an error message when the logged-in user is not the comment's creator`,
+        () => {
+          // find a comment written by a different user from the token in the auth header
+          const commentId = testComments.find((comment) => comment.creator_id !== 1).id;
+
+          return supertest(app)
+            .delete(`/api/comments/${commentId}`)
+            .set('Authorization', authHeader)
+            .expect(
+              403,
+              { message: `User is unauthorized to delete the comment with id ${commentId}` }
+            );
+        });
+    });
   });
 });

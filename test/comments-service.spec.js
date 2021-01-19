@@ -176,5 +176,14 @@ describe('Comments Service Object', () => {
           expect(result).to.eql(existingComment);
         });
     });
+
+    it(`deleteComment() deletes the comment from the 'comments' table`, () => {
+      const id = 1;
+      return commentsService.deleteComment(db, id)
+        .then(() => commentsService.getAllFullComments(db))
+        .then((results) => {
+          expect(results).to.eql(testFullComments.filter((comment) => comment.id !== id));
+        });
+    });
   });
 });

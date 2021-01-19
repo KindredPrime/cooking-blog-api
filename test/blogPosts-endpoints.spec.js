@@ -1,11 +1,18 @@
 const app = require('../src/app');
-const { makeUsersArray } = require('./users-test-util');
+const {
+  makeUsersArray,
+  makeMaliciousUser
+} = require('./users-test-util');
 const {
   makeBlogPostsArray,
   makeMaliciousBlogPost,
   gotExpectedResult
 } = require('./blogPosts-test-util');
-const { testValidationFields } = require('./test-util');
+const {
+  testValidationFields,
+  makeFullBlogPostsArray,
+  makeMaliciousFullBlogPost
+} = require('./test-util');
 
 describe('Blog Posts Endpoints', () => {
   let db;
@@ -27,7 +34,12 @@ describe('Blog Posts Endpoints', () => {
   after('Disconnect from database', () => db.destroy());
 
   const testUsers = makeUsersArray();
+  const { maliciousUser, sanitizedUser } = makeMaliciousUser();
+
   const testBlogPosts = makeBlogPostsArray();
+  const testFullBlogPosts = makeFullBlogPostsArray();
+  const { maliciousBlogPost, sanitizedBlogPost } = makeMaliciousBlogPost();
+  const { maliciousFullBlogPost, sanitizedFullBlogPost } = makeMaliciousFullBlogPost();
 
   describe('GET /blog-posts', () => {
     context('Given no blog posts', () => {
@@ -66,7 +78,6 @@ describe('Blog Posts Endpoints', () => {
     });
 
     context('Given XSS content', () => {
-      const { maliciousBlogPost, sanitizedBlogPost } = makeMaliciousBlogPost();
       beforeEach(`Populate 'users' table and add malicious post to 'blog_posts' table`, () => {
         return db
           .insert(testUsers)
@@ -87,7 +98,7 @@ describe('Blog Posts Endpoints', () => {
   });
 
   describe('GET /api/blog-posts/:id', () => {
-    context('Given no blog posts', () => {
+    context('Given no blog posts in database', () => {
       it('Responds with 404 and an error message', () => {
         const id = 1000;
         return supertest(app)
@@ -96,7 +107,7 @@ describe('Blog Posts Endpoints', () => {
       });
     });
 
-    context(`Given there are blog posts in the 'blog_posts' table`, () => {
+    context(`Given the database has blog posts`, () => {
       beforeEach(`Populate 'users' and 'blog_posts' tables`, () => {
         return db
           .insert(testUsers)
@@ -108,19 +119,20 @@ describe('Blog Posts Endpoints', () => {
           });
       });
 
-      it('Responds with 200 and the blog post with the id', () => {
-        const id = 1;
-        return supertest(app)
-          .get(`/api/blog-posts/${id}`)
-          .expect(200, testBlogPosts[id-1]);
-      });
+      it(
+        `Responds with 200 and the full blog post (includes its author's username) with the id`,
+        () => {
+          const id = 1;
+          return supertest(app)
+            .get(`/api/blog-posts/${id}`)
+            .expect(200, testFullBlogPosts[id-1]);
+        });
     });
 
-    context('Given XSS content', () => {
-      const { maliciousBlogPost, sanitizedBlogPost } = makeMaliciousBlogPost();
-      beforeEach(`Populate 'users' table and add malicious post to 'blog_posts' table`, () => {
+    context('Given XSS content in database', () => {
+      beforeEach(`Populate 'users' and 'blog_posts' tables with XSS content`, () => {
         return db
-          .insert(testUsers)
+          .insert(maliciousUser)
           .into('users')
           .then(() => {
             return db
@@ -133,7 +145,7 @@ describe('Blog Posts Endpoints', () => {
         const id = 1;
         return supertest(app)
           .get(`/api/blog-posts/${id}`)
-          .expect(200, sanitizedBlogPost);
+          .expect(200, sanitizedFullBlogPost);
       });
     });
   });
@@ -190,13 +202,6 @@ describe('Blog Posts Endpoints', () => {
     });
 
     context('Given XSS content', () => {
-      // Note: the last_edited in maliciousBlogPost will be ignored when POSTing it, and the response from the POST will have its last_edited set to a current timestamp
-      let { maliciousBlogPost, sanitizedBlogPost } = makeMaliciousBlogPost();
-      maliciousBlogPost = {
-        ...maliciousBlogPost,
-        last_edited: null
-      };
-
       it(
         `Responds with 201 and the new blog post, sanitized, and adds the new blog post to the database`,
         () => {

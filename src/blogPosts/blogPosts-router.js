@@ -1,6 +1,6 @@
 const express = require('express');
 const blogPostsService = require('./blogPosts-service');
-const { sanitizeBlogPost } = require('../sanitize');
+const { sanitizeBlogPost, sanitizeFullBlogPost } = require('../sanitize');
 const logger = require('../logger');
 const requireLogin = require('../requireLogin');
 const { validateBlogPostPost } = require('../util');
@@ -46,7 +46,7 @@ blogPostsRouter.route('/:id')
   .get((req, res, next) => {
     const { id } = req.params;
 
-    return blogPostsService.getBlogPostById(req.app.get('db'), id)
+    return blogPostsService.getFullBlogPostById(req.app.get('db'), id)
       .then((result) => {
         if (!result) {
           return res
@@ -54,7 +54,7 @@ blogPostsRouter.route('/:id')
             .json({ message: `There is no blog post with id ${id}` });
         }
 
-        return res.json(sanitizeBlogPost(result));
+        return res.json(sanitizeFullBlogPost(result));
       })
       .catch(next);
   });

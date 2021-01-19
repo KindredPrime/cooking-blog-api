@@ -25,6 +25,13 @@ function sanitizeBlogPost(blogPost) {
   };
 }
 
+function sanitizeFullBlogPost(blogPost) {
+  return {
+    ...sanitizeBlogPost(blogPost),
+    author_username: xss(blogPost.author_username)
+  };
+}
+
 function sanitizeComment(comment) {
   return {
     ...comment,
@@ -44,6 +51,7 @@ module.exports = {
   sanitizeUser,
   sanitizeFullUser,
   sanitizeBlogPost,
+  sanitizeFullBlogPost,
   sanitizeComment,
   sanitizeFullComment
 }

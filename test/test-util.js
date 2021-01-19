@@ -82,6 +82,38 @@ function makeMaliciousFullUser() {
   return { maliciousFullUser, sanitizedFullUser };
 }
 
+function makeFullBlogPostsArray() {
+  const testUsers = makeUsersArray();
+
+  return makeBlogPostsArray().map((post) => {
+    const author_username = testUsers
+      .find((user) => user.id === post.author_id)
+      .username;
+
+    return {
+      ...post,
+      author_username
+    };
+  })
+}
+
+function makeMaliciousFullBlogPost() {
+  const { maliciousBlogPost, sanitizedBlogPost } = makeMaliciousBlogPost();
+  const { maliciousUser, sanitizedUser } = makeMaliciousUser();
+
+  const maliciousFullBlogPost = {
+    ...maliciousBlogPost,
+    author_username: maliciousUser.username
+  };
+
+  const sanitizedFullBlogPost = {
+    ...sanitizedBlogPost,
+    author_username: sanitizedUser.username
+  };
+
+  return { maliciousFullBlogPost, sanitizedFullBlogPost };
+}
+
 function makeFullCommentsArray() {
   const testUsers = makeUsersArray();
   const testBlogPosts = makeBlogPostsArray();
@@ -103,5 +135,7 @@ module.exports = {
   testValidationFields,
   makeFullUsersArray,
   makeMaliciousFullUser,
+  makeFullBlogPostsArray,
+  makeMaliciousFullBlogPost,
   makeFullCommentsArray,
 };

@@ -1,3 +1,7 @@
+const { makeUsersArray, makeMaliciousUser } = require('./users-test-util');
+const { makeBlogPostsArray, makeMaliciousBlogPost } = require('./blogPosts-test-util');
+const { makeCommentsArray, makeMaliciousComment } = require('./comments-test-util');
+
 /**
  * Generate field validation test cases
  *
@@ -41,6 +45,63 @@ function testValidationFields(
     }
 }
 
+function makeFullUsersArray() {
+  const testBlogPosts = makeBlogPostsArray();
+  const testComments = makeCommentsArray();
+
+  return makeUsersArray().map((user) => {
+    const blogPosts = testBlogPosts.filter((post) => post.author_id === user.id);
+    const comments = testComments.filter((comment) => comment.creator_id === user.id);
+
+    return {
+      ...user,
+      blogPosts,
+      comments
+    };
+  });
+}
+
+function makeMaliciousFullUser() {
+  const { maliciousUser, sanitizedUser } = makeMaliciousUser();
+  const { maliciousBlogPost, sanitizedBlogPost } = makeMaliciousBlogPost();
+  const { maliciousComment, sanitizedComment } = makeMaliciousComment();
+
+  const maliciousFullUser = {
+    ...maliciousUser,
+    blogPosts: [maliciousBlogPost],
+    comments: [maliciousComment]
+  };
+
+  // The password is removed from the response
+  const sanitizedFullUser = {
+    ...sanitizedUser,
+    blogPosts: [sanitizedBlogPost],
+    comments: [sanitizedComment]
+  };
+
+  return { maliciousFullUser, sanitizedFullUser };
+}
+
+function makeFullCommentsArray() {
+  const testUsers = makeUsersArray();
+  const testBlogPosts = makeBlogPostsArray();
+
+  return makeCommentsArray().map((comment) => {
+    const { creator_id, post_id } = comment;
+    const creator_username = testUsers[creator_id-1].username;
+    const post_title = testBlogPosts[post_id-1].title;
+
+    return {
+      ...comment,
+      creator_username,
+      post_title
+    };
+  });
+}
+
 module.exports = {
-  testValidationFields
+  testValidationFields,
+  makeFullUsersArray,
+  makeMaliciousFullUser,
+  makeFullCommentsArray,
 };

@@ -1,8 +1,8 @@
 const express = require('express');
-const xss = require('xss');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const usersService = require('./users-service');
+const { sanitizeUser, sanitizeFullUser } = require('../sanitize');
 const { validateUserPost } = require('../util');
 const logger = require('../logger');
 const { SALT_ROUNDS, SECRET_KEY } = require('../config');
@@ -11,20 +11,9 @@ const usersRouter = express.Router();
 const bodyParser = express.json();
 
 function removePassword(user) {
-  const { id, username, email } = user;
-  return {
-    id,
-    username,
-    email
-  };
-}
+  delete user.user_password;
 
-function sanitizeUser(user) {
-  return {
-    ...user,
-    username: xss(user.username),
-    email: xss(user.email)
-  }
+  return user;
 }
 
 usersRouter.route('/')
@@ -61,7 +50,7 @@ usersRouter.route('/')
 usersRouter.route('/:id')
   .get((req, res, next) => {
     const { id } = req.params;
-    return usersService.getUserById(req.app.get('db'), id)
+    return usersService.getFullUserById(req.app.get('db'), id)
       .then((result) => {
         if (!result) {
           return res
@@ -69,7 +58,7 @@ usersRouter.route('/:id')
             .json({ message: `There is no user with id ${id}`});
         }
 
-        const sanitizedUser = sanitizeUser(result);
+        const sanitizedUser = sanitizeFullUser(result);
         return res.json(removePassword(sanitizedUser));
       })
       .catch(next);

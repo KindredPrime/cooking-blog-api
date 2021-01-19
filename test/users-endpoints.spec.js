@@ -5,7 +5,9 @@ const {
   makeMaliciousUser,
   userWasAddedToDatabase
 } = require('./users-test-util');
-const { testValidationFields } = require('./test-util');
+const { makeBlogPostsArray, makeMaliciousBlogPost } = require('./blogPosts-test-util');
+const { makeCommentsArray, makeMaliciousComment } = require('./comments-test-util');
+const { testValidationFields, makeFullUsersArray, makeMaliciousFullUser } = require('./test-util');
 
 describe('Users Endpoints', () => {
   let db;
@@ -18,14 +20,24 @@ describe('Users Endpoints', () => {
     app.set('db', db);
   });
 
-  const testUsers = makeUsersArray();
-  const responseUsers = makeUsersResponseArray();
-
   const truncateTable = 'TRUNCATE users RESTART IDENTITY CASCADE'
   before('Clear the database', () => db.raw(truncateTable));
   afterEach('Clear the database', () => db.raw(truncateTable));
 
   after('Disconnect from database', () => db.destroy());
+
+  const testUsers = makeUsersArray();
+  const responseUsers = makeUsersResponseArray(testUsers);
+  const testFullUsers = makeFullUsersArray();
+  const responseFullUsers = makeUsersResponseArray(testFullUsers);
+  const { maliciousUser, sanitizedUser } = makeMaliciousUser();
+  const { maliciousFullUser, sanitizedFullUser } = makeMaliciousFullUser();
+
+  const testBlogPosts = makeBlogPostsArray();
+  const { maliciousBlogPost, sanitizedBlogPost } = makeMaliciousBlogPost();
+
+  const testComments = makeCommentsArray();
+  const { maliciousComment, sanitizedComment } = makeMaliciousComment();
 
   describe('GET /api/users/:id', () => {
     context('Given no users', () => {
@@ -38,33 +50,52 @@ describe('Users Endpoints', () => {
     });
 
     context('Given the table has users', () => {
-      before('Populate users table', () => {
+      beforeEach(`Populate 'users', 'blog_posts', and 'comments' tables`, () => {
         return db
           .insert(testUsers)
-          .into('users');
+          .into('users')
+          .then(() => {
+            return db
+              .insert(testBlogPosts)
+              .into('blog_posts')
+              .then(() => {
+                return db
+                  .insert(testComments)
+                  .into('comments');
+              });
+          });
       });
 
-      it('Responds with 200 and the user with id, excluding its password', () => {
-        const id = 1;
-        return supertest(app)
-          .get(`/api/users/${id}`)
-          .expect(200, responseUsers[id-1]);
-      });
+      it('Responds with 200 and the full user (including all of its comments and blog posts) with the id, excluding its password',
+        () => {
+          const id = 1;
+          return supertest(app)
+            .get(`/api/users/${id}`)
+            .expect(200, responseFullUsers[id-1]);
+        });
     });
 
     context('Given XSS content', () => {
-      const { maliciousUser, sanitizedUser } = makeMaliciousUser();
-
-      before(`Insert malicious user into 'users' table`, () => {
+      before(`Populate 'users', 'blog_posts', and 'comments' with malicious entities`, () => {
         return db
           .insert(maliciousUser)
-          .into('users');
+          .into('users')
+          .then(() => {
+            return db
+              .insert(maliciousBlogPost)
+              .into('blog_posts')
+              .then(() => {
+                return db
+                  .insert(maliciousComment)
+                  .into('comments');
+              });
+          });
       });
 
       it('Responds with 200 and the user with id, sanitized', () => {
         return supertest(app)
           .get(`/api/users/${maliciousUser.id}`)
-          .expect(200, sanitizedUser);
+          .expect(200, sanitizedFullUser);
       });
     });
   });
@@ -88,7 +119,6 @@ describe('Users Endpoints', () => {
     });
 
     context('Given XSS content', () => {
-      const { maliciousUser, sanitizedUser } = makeMaliciousUser();
       it(
         `Responds with 201 and the new user without its XSS content, and adds it to the 'users' table`,
         () => {

@@ -23,15 +23,15 @@ function makeUsersArray() {
   ];
 }
 
-function makeUsersResponseArray() {
-  return makeUsersArray().map((user) => {
-    const { id, username, email } = user;
-    return {
-      id,
-      username,
-      email
-    };
-  })
+/*
+  Remove the user_password from the user before sending it in an HTTP response
+*/
+function makeUsersResponseArray(users) {
+  return users.map((user) => {
+    const newUser = JSON.parse(JSON.stringify(user));
+    delete newUser.user_password;
+    return newUser;
+  });
 }
 
 function makeMaliciousUser() {

@@ -1,20 +1,12 @@
 const express = require('express');
-const xss = require('xss');
 const blogPostsService = require('./blogPosts-service');
+const { sanitizeBlogPost } = require('../sanitize');
 const logger = require('../logger');
-const { requireLogin, validateBlogPostPost } = require('../util');
+const requireLogin = require('../requireLogin');
+const { validateBlogPostPost } = require('../util');
 
 const blogPostsRouter = express.Router();
 const bodyParser = express.json();
-
-function sanitizePost(blogPost) {
-  const { title, content } = blogPost;
-  return {
-    ...blogPost,
-    title: xss(title),
-    content: xss(content)
-  };
-}
 
 blogPostsRouter.route('/')
   .get((req, res, next) => {
@@ -23,7 +15,7 @@ blogPostsRouter.route('/')
     return blogPostsService.getAllBlogPosts(req.app.get('db'), authorId)
       .then((results) => {
         return res
-          .json(results.map(sanitizePost));
+          .json(results.map(sanitizeBlogPost));
       })
       .catch(next);
   })
@@ -45,7 +37,7 @@ blogPostsRouter.route('/')
         return res
           .status(201)
           .location(`/api/blog-posts/${result.id}`)
-          .json(sanitizePost(result));
+          .json(sanitizeBlogPost(result));
       })
       .catch(next);
   });
@@ -62,7 +54,7 @@ blogPostsRouter.route('/:id')
             .json({ message: `There is no blog post with id ${id}` });
         }
 
-        return res.json(sanitizePost(result));
+        return res.json(sanitizeBlogPost(result));
       })
       .catch(next);
   });

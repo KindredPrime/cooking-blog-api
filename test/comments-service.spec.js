@@ -3,9 +3,9 @@ const { makeUsersArray } = require('./users-test-util');
 const { makeBlogPostsArray } = require('./blogPosts-test-util');
 const {
   makeCommentsArray,
-  makeFullCommentsArray,
   gotExpectedComment
 } = require('./comments-test-util');
+const { makeFullCommentsArray } = require('./test-util');
 
 describe('Comments Service Object', () => {
   let db;

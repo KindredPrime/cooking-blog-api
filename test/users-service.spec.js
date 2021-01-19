@@ -1,4 +1,6 @@
 const { makeUsersArray } = require('./users-test-util');
+const { makeBlogPostsArray } = require('./blogPosts-test-util');
+const { makeCommentsArray } = require('./comments-test-util');
 const usersService = require('../src/users/users-service');
 
 describe('Users Service Object', () => {
@@ -48,11 +50,23 @@ describe('Users Service Object', () => {
 
   context('Given the table has users', () => {
     const testUsers = makeUsersArray();
+    const testBlogPosts = makeBlogPostsArray();
+    const testComments = makeCommentsArray();
 
-    beforeEach(`Insert users into 'users' table`, () => {
+    beforeEach(`Populate 'users', 'blog_posts', and 'comments tables`, () => {
       return db
         .insert(testUsers)
-        .into('users');
+        .into('users')
+        .then(() => {
+          return db
+            .insert(testBlogPosts)
+            .into('blog_posts')
+            .then(() => {
+              return db
+                .insert(testComments)
+                .into('comments');
+            });
+        });
     });
 
     it('getAllUsers() returns all the users in the table', () => {
@@ -68,6 +82,22 @@ describe('Users Service Object', () => {
         .then((result) => {
           expect(result).to.eql(testUsers[id-1]);
         });
+    });
+
+    it(
+      'getFullUserById() returns the full user (including all the blog posts it has authored, and all of the comments it has created) with the id',
+      () => {
+        const testUser = testUsers[0];
+        const id = testUser.id;
+        return usersService.getFullUserById(db, id)
+          .then((result) => {
+            const { username, email, userPassword, blogPosts, comments } = result;
+            expect(username).to.eql(testUser.username);
+            expect(email).to.eql(testUser.email);
+            expect(userPassword).to.eql(testUser.userPassword);
+            expect(blogPosts).to.eql(testBlogPosts.filter((post) => post.author_id === id));
+            expect(comments).to.eql(testComments.filter((comment) => comment.creator_id === id));
+          });
     });
 
     it('getUserByUsername() returns the user with the username', () => {

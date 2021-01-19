@@ -1,5 +1,5 @@
-const { makeUsersArray, makeMaliciousUser } = require('./users-test-util');
-const { makeBlogPostsArray, makeMaliciousBlogPost } = require('./blogPosts-test-util');
+const { makeMaliciousUser } = require('./users-test-util');
+const { makeMaliciousBlogPost } = require('./blogPosts-test-util');
 
 function makeCommentsArray() {
   return [
@@ -39,23 +39,6 @@ function makeCommentsArray() {
       last_edited: '2021-01-01T10:31:39.000Z'
     },
   ];
-}
-
-function makeFullCommentsArray() {
-  const testUsers = makeUsersArray();
-  const testBlogPosts = makeBlogPostsArray();
-
-  return makeCommentsArray().map((comment) => {
-    const { creator_id, post_id } = comment;
-    const creator_username = testUsers[creator_id-1].username;
-    const post_title = testBlogPosts[post_id-1].title;
-
-    return {
-      ...comment,
-      creator_username,
-      post_title
-    };
-  });
 }
 
 function gotExpectedComment(comment, expectedComment) {
@@ -113,7 +96,6 @@ function makeMaliciousComment() {
 
 module.exports = {
   makeCommentsArray,
-  makeFullCommentsArray,
   gotExpectedComment,
   gotExpectedFullComment,
   makeMaliciousComment

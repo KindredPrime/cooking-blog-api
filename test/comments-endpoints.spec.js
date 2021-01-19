@@ -3,11 +3,10 @@ const { makeUsersArray, makeMaliciousUser } = require('./users-test-util');
 const { makeBlogPostsArray, makeMaliciousBlogPost } = require('./blogPosts-test-util');
 const {
   makeCommentsArray,
-  makeFullCommentsArray,
   makeMaliciousComment,
   gotExpectedComment
 } = require('./comments-test-util');
-const { testValidationFields } = require('./test-util');
+const { testValidationFields, makeFullCommentsArray } = require('./test-util');
 
 describe('Comments Endpoints', () => {
   let db;

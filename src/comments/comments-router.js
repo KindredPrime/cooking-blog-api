@@ -1,26 +1,12 @@
 const express = require('express');
-const xss = require('xss');
 const commentsService = require('./comments-service');
-const { requireLogin, validateCommentPost } = require('../util');
+const { sanitizeComment, sanitizeFullComment } = require('../sanitize');
+const requireLogin = require('../requireLogin');
+const { validateCommentPost } = require('../util');
 const logger = require('../logger');
 
 const commentsRouter = express.Router();
 const bodyParser = express.json();
-
-function sanitizeComment(comment) {
-  return {
-    ...comment,
-    content: xss(comment.content)
-  };
-}
-
-function sanitizeFullComment(fullComment) {
-  return {
-    ...sanitizeComment(fullComment),
-    creator_username: xss(fullComment.creator_username),
-    post_title: xss(fullComment.post_title)
-  };
-}
 
 commentsRouter.route('/')
   /**

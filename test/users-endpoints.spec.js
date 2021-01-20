@@ -39,6 +39,47 @@ describe('Users Endpoints', () => {
   const testComments = makeCommentsArray();
   const { maliciousComment, sanitizedComment } = makeMaliciousComment();
 
+  // testToken is initialized in setup.js for the user with id 1
+  const authHeader = `Bearer ${testToken}`
+
+  describe('GET /api/users/', () => {
+    context('Given no users in database', () => {
+      it(`Responds with 200 and an empty array`, () => {
+        return supertest(app)
+          .get('/api/users/')
+          .expect(200, []);
+      });
+    });
+
+    context('Given the database has users', () => {
+      beforeEach(`Populate 'users' table`, () => {
+        return db
+          .insert(testUsers)
+          .into('users');
+      });
+
+      it(`Responds with 200 and all the users, excluding their passwords`, () => {
+        return supertest(app)
+          .get('/api/users/')
+          .expect(200, responseUsers);
+      });
+    });
+
+    context('Given XSS content in database', () => {
+      beforeEach(`Populate 'users' table with XSS content`, () => {
+        return db
+          .insert(maliciousUser)
+          .into('users');
+      });
+
+      it('Responds with 200 and all users, sanitized, and excluding their passwords', () => {
+        return supertest(app)
+          .get('/api/users/')
+          .expect(200, [sanitizedUser]);
+      });
+    });
+  });
+
   describe('GET /api/users/:id', () => {
     context('Given no users', () => {
       it('Responds with 404 and an error with a message', () => {
@@ -279,6 +320,59 @@ describe('Users Endpoints', () => {
             .post(`/api/users/login`)
             .send(body)
             .expect(401, { message: invalidMessage });
+        });
+    });
+  });
+
+  describe('DELETE /api/users/:id', () => {
+    context('Given no users in database', () => {
+      it('Responds with 404 and an error message', () => {
+        const id = 1000;
+        return supertest(app)
+          .delete(`/api/users/${id}`)
+          .expect(404, { message: `There is no user with id ${id}` });
+      });
+    });
+
+    context('Given the database has users', () => {
+      beforeEach(`Populate 'users' table`, () => {
+        return db
+          .insert(testUsers)
+          .into('users');
+      });
+
+      it('Responds with 204 and removes the user from the database', () => {
+        // find a user with the same id as the token in the auth header
+        const userId = testUsers.find((user) => user.id === 1).id;
+
+        return supertest(app)
+          .delete(`/api/users/${userId}`)
+          .set('Authorization', authHeader)
+          .expect(204)
+          .then(() => {
+            return supertest(app)
+              .get('/api/users/')
+              .expect(200, responseUsers.filter((user) => user.id !== userId));
+          });
+      });
+
+      it(`Responds with 401 and an error message when no user token is provided in the request`, () => {
+        const id = testUsers[0].id;
+        return supertest(app)
+          .delete(`/api/users/${id}`)
+          .expect(401, { message: `The request must have an 'Authorization' header` });
+      });
+
+      it(
+        `Responds with 403 and an error message when the logged-in user doesn't match the user being deleted`,
+        () => {
+          // find a user with a different id the token in the auth header
+          const userId = testUsers.find((user) => user.id !== 1).id;
+
+          return supertest(app)
+            .delete(`/api/users/${userId}`)
+            .set('Authorization', authHeader)
+            .expect(403, { message: `User is unauthorized to delete the user with id ${userId}` })
         });
     });
   });

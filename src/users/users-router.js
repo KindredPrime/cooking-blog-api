@@ -6,6 +6,7 @@ const { sanitizeUser, sanitizeFullUser } = require('../sanitize');
 const { validateUserPost } = require('../util');
 const logger = require('../logger');
 const { SALT_ROUNDS, SECRET_KEY } = require('../config');
+const requireLogin = require('../requireLogin');
 
 const usersRouter = express.Router();
 const bodyParser = express.json();
@@ -17,6 +18,13 @@ function removePassword(user) {
 }
 
 usersRouter.route('/')
+  .get((req, res, next) => {
+    return usersService.getAllUsers(req.app.get('db'))
+      .then((users) => {
+        return res.json(users.map((user) => removePassword(sanitizeUser(user))));
+      })
+      .catch(next);
+  })
   .post(bodyParser, async (req, res, next) => {
     const { username, user_password, email } = req.body;
     const newUser = { username, user_password, email };
@@ -43,23 +51,6 @@ usersRouter.route('/')
         return res
           .status(201)
           .json(removePassword(sanitizedUser));
-      })
-      .catch(next);
-  });
-
-usersRouter.route('/:id')
-  .get((req, res, next) => {
-    const { id } = req.params;
-    return usersService.getFullUserById(req.app.get('db'), id)
-      .then((result) => {
-        if (!result) {
-          return res
-            .status(404)
-            .json({ message: `There is no user with id ${id}`});
-        }
-
-        const sanitizedUser = sanitizeFullUser(result);
-        return res.json(removePassword(sanitizedUser));
       })
       .catch(next);
   });
@@ -103,6 +94,46 @@ usersRouter.route('/login')
             token,
             id
           });
+      })
+      .catch(next);
+  });
+
+usersRouter.route('/:id')
+  .all((req, res, next) => {
+    const { id } = req.params;
+    return usersService.getFullUserById(req.app.get('db'), id)
+      .then((result) => {
+        if (!result) {
+          return res
+            .status(404)
+            .json({ message: `There is no user with id ${id}`});
+        }
+
+        req.user = result;
+        next();
+      })
+      .catch(next);
+  })
+  .get((req, res, next) => {
+    const sanitizedFullUser = sanitizeFullUser(req.user);
+    return res.json(removePassword(sanitizedFullUser));
+  })
+  .delete(requireLogin, (req, res, next) => {
+    const { id } = req.params;
+
+    if (req.user.id !== parseInt(id)) {
+      const message = `User is unauthorized to delete the user with id ${id}`;
+      logger.error(message);
+      return res
+        .status(403)
+        .json({ message });
+    }
+
+    return usersService.deleteUser(req.app.get('db'), id)
+      .then(() => {
+        return res
+          .status(204)
+          .end();
       })
       .catch(next);
   });

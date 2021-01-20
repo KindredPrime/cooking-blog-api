@@ -118,25 +118,6 @@ describe('Users Service Object', () => {
         });
     });
 
-    it('updateUser() updates the user with the id', () => {
-      const id = 1;
-      const updatedFields = {
-        username: 'UpdatedUsername',
-        user_password: 'updatedpassword',
-        email: 'updated_email@gmail.com'
-      };
-      const expectedUser = {
-        id,
-        ...updatedFields
-      };
-
-      return usersService.updateUser(db, id, updatedFields)
-        .then(() => usersService.getUserById(db, id))
-        .then((result) => {
-          expect(result).to.eql(expectedUser);
-        });
-    });
-
     it('deleteUser() removes the user from the table', () => {
       const id = 1;
       return usersService.deleteUser(db, id)

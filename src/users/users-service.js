@@ -1,4 +1,4 @@
-const { addTailFunction, convertTimestamp } = require('../util');
+const { convertTimestamp } = require('../util');
 
 const usersService = {
   getAllUsers(db) {
@@ -68,9 +68,6 @@ const usersService = {
   insertUser(db, user) {
     return db.insert(user).into('users').returning('*')
       .then((results) => results[0]);
-  },
-  updateUser(db, id, updatedFields) {
-    return usersService.getUserById(db, id).update(updatedFields);
   },
   deleteUser(db, id) {
     return usersService.getUserById(db, id).delete();

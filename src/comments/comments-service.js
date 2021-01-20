@@ -38,37 +38,6 @@ const commentsService = {
     return db.insert(dbComment).into('comments').returning('*')
       .then((results) => results[0]);
   },
-  /*
-    Update the comment with the id, using the provided fields, and give its last_edited field a
-    current timestamp.  Then return the updated comment.
-
-    If none of the provided fields are different from the comment to be updated, then nothing
-    will be updated.  The comment is still returned.
-  */
-  updateComment(db, id, updatedFields) {
-    const { content, creator_id, post_id } = updatedFields;
-
-    return commentsService.getCommentById(db, id)
-      .then((result) => {
-        if (
-          result.content === content
-          && result.creator_id === creator_id
-          && result.post_id === post_id
-        ) {
-          return result;
-        }
-
-        const updatedCommentFields = {
-          content,
-          creator_id,
-          post_id,
-          last_edited: new Date().toISOString()
-        };
-
-        return commentsService.getCommentById(db, id).update(updatedCommentFields).returning('*')
-          .then((results) => results[0]);
-      });
-  },
   deleteComment(db, id) {
     return commentsService.getCommentById(db, id).del();
   }

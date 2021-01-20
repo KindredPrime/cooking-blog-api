@@ -130,53 +130,6 @@ describe('Comments Service Object', () => {
           });
       });
 
-    it(`updateComment() updates the comment with the id, giving it a current last_edited timestamp, and returns the updated comment`, () => {
-      const existingComment = testComments[0];
-
-      const oldLastEdited = existingComment.last_edited;
-      const id = existingComment.id;
-
-      const updatedFields = {
-        content: `${existingComment.content}1`,
-        creator_id: existingComment.creator_id + 1,
-        post_id: existingComment.post_id + 1
-      };
-
-      // last_edited is excluded because you can't know what its exact value will be
-      const expectedComment = {
-        id: 1,
-        ...updatedFields
-      };
-      return commentsService.updateComment(db, id, updatedFields)
-        .then((result) => {
-          gotExpectedComment(result, expectedComment);
-          expect(new Date(result.last_edited).getTime()).is.above(new Date(oldLastEdited).getTime());
-        })
-        .then(() => commentsService.getCommentById(db, id))
-        .then((result) => {
-          gotExpectedComment(result, expectedComment);
-        });
-    });
-
-    it(`updateComment() doesn't update the comment's last_edited timestamp if none of the fields will be changed`, () => {
-      const existingComment = testComments[0];
-      const id = existingComment.id;
-      const updatedFields = {
-        content: existingComment.content,
-        creator_id: existingComment.creator_id,
-        post_id: existingComment.post_id
-      };
-
-      return commentsService.updateComment(db, id, updatedFields)
-        .then((result) => {
-          expect(result).to.eql(existingComment);
-        })
-        .then(() => commentsService.getCommentById(db, id))
-        .then((result) => {
-          expect(result).to.eql(existingComment);
-        });
-    });
-
     it(`deleteComment() deletes the comment from the 'comments' table`, () => {
       const id = 1;
       return commentsService.deleteComment(db, id)

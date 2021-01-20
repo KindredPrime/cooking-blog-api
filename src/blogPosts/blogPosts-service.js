@@ -1,6 +1,20 @@
 const { convertTimestamp, addTailFunction } = require('../util');
 
 const blogPostsService = {
+  _joinTables(db) {
+    return db
+      .select(
+        'blog_posts.id as id',
+        'title',
+        'author_id',
+        'content',
+        'last_edited',
+        'username as author_username'
+      )
+      .from('blog_posts')
+      .join('users', 'users.id', '=', 'author_id')
+      .orderBy('id');
+  },
   getAllBlogPosts(db, author_id) {
     const q = db.select('*').from('blog_posts');
 
@@ -9,6 +23,15 @@ const blogPostsService = {
     }
 
     return q;
+  },
+  getAllFullBlogPosts(db, authorId) {
+    const query = blogPostsService._joinTables(db);
+
+    if (authorId) {
+      return query.where('author_id', authorId);
+    }
+
+    return query;
   },
   getBlogPostById(db, id) {
     return blogPostsService.getAllBlogPosts(db).where({ id }).first();
@@ -39,5 +62,5 @@ const blogPostsService = {
 };
 
 module.exports = {
-  ...addTailFunction(blogPostsService, convertTimestamp)
+  ...addTailFunction(blogPostsService, convertTimestamp, ['_joinTables'])
 };

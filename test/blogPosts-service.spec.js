@@ -1,6 +1,7 @@
 const blogPostsService = require('../src/blogPosts/blogPosts-service');
 const { makeUsersArray } = require('./users-test-util');
 const { makeBlogPostsArray } = require('./blogPosts-test-util');
+const { makeFullBlogPostsArray } = require('./test-util');
 
 describe('Blog Posts Service Object', () => {
   let db;
@@ -21,6 +22,7 @@ describe('Blog Posts Service Object', () => {
 
   const testUsers = makeUsersArray();
   const testBlogPosts = makeBlogPostsArray();
+  const testFullBlogPosts = makeFullBlogPostsArray();
 
   context('Given no blog posts', () => {
     beforeEach(`Populate 'users' table`, () => {
@@ -31,6 +33,13 @@ describe('Blog Posts Service Object', () => {
 
     it('getAllBlogPosts() returns an empty array', () => {
       return blogPostsService.getAllBlogPosts(db)
+        .then((results) => {
+          expect(results).to.eql([]);
+        });
+    });
+
+    it('getAllFullBlogPosts() returns an empty array', () => {
+      return blogPostsService.getAllFullBlogPosts(db)
         .then((results) => {
           expect(results).to.eql([]);
         });
@@ -99,6 +108,23 @@ describe('Blog Posts Service Object', () => {
         });
     });
 
+    it(
+      `getAllFullBlogPosts() returns all the full blog posts (including their author's username) from the 'blog_posts' table`,
+      () => {
+        return blogPostsService.getAllFullBlogPosts(db)
+          .then((results) => {
+            expect(results).to.eql(testFullBlogPosts);
+          });
+    });
+
+    it('getAllFullBlogPosts() returns all the full blog posts with the author_id', () => {
+      const authorId = testFullBlogPosts[0].author_id;
+      return blogPostsService.getAllFullBlogPosts(db, authorId)
+        .then((results) => {
+          expect(results).to.eql(testFullBlogPosts.filter((post) => post.author_id === authorId));
+        });
+    });
+
     it(`getBlogPostById() returns the blog post with the id`, () => {
       const id = 1;
       return blogPostsService.getBlogPostById(db, id)
@@ -107,7 +133,7 @@ describe('Blog Posts Service Object', () => {
         });
     });
 
-    it(`getFullBlogPostById() returns the blog post with the id, along with its author's username`, () => {
+    it(`getFullBlogPostById() returns the full blog post with the id`, () => {
       const id = 1;
       return blogPostsService.getFullBlogPostById(db, id)
         .then((result) => {

@@ -35,12 +35,12 @@ describe('Blog Posts Endpoints', () => {
   after('Disconnect from database', () => db.destroy());
 
   const testUsers = makeUsersArray();
-  const { maliciousUser, sanitizedUser } = makeMaliciousUser();
+  const { maliciousUser } = makeMaliciousUser();
 
   const testBlogPosts = makeBlogPostsArray();
   const testFullBlogPosts = makeFullBlogPostsArray();
   const { maliciousBlogPost, sanitizedBlogPost } = makeMaliciousBlogPost();
-  const { maliciousFullBlogPost, sanitizedFullBlogPost } = makeMaliciousFullBlogPost();
+  const { sanitizedFullBlogPost } = makeMaliciousFullBlogPost();
 
   // testToken is initialized in setup.js for the user with id 1
   const authHeader = `Bearer ${testToken}`
@@ -66,25 +66,25 @@ describe('Blog Posts Endpoints', () => {
           });
       });
 
-      it('Responds with 200 and all the blog posts', () => {
+      it(`Responds with 200 and all the full blog posts (includes their author's username)`, () => {
         return supertest(app)
           .get(`/api/blog-posts/`)
-          .expect(200, testBlogPosts);
+          .expect(200, testFullBlogPosts);
       });
 
       it(`Responds with 200 and only blog posts with the provided author param`, () => {
-        const authorId = testBlogPosts[0].author_id;
+        const authorId = testFullBlogPosts[0].author_id;
         return supertest(app)
           .get(`/api/blog-posts/?author=${authorId}`)
           .query({ authorId })
-          .expect(200, testBlogPosts.filter((post) => post.author_id === authorId));
+          .expect(200, testFullBlogPosts.filter((post) => post.author_id === authorId));
       });
     });
 
     context('Given XSS content', () => {
-      beforeEach(`Populate 'users' table and add malicious post to 'blog_posts' table`, () => {
+      beforeEach(`Populate 'users' and 'blog_posts' tables with XSS content`, () => {
         return db
-          .insert(testUsers)
+          .insert(maliciousUser)
           .into('users')
           .then(() => {
             return db
@@ -96,7 +96,7 @@ describe('Blog Posts Endpoints', () => {
       it(`Responds with 200 and all blog posts, sanitized`, () => {
         return supertest(app)
           .get(`/api/blog-posts/`)
-          .expect(200, [sanitizedBlogPost]);
+          .expect(200, [sanitizedFullBlogPost]);
       });
     });
   });
@@ -358,7 +358,7 @@ describe('Blog Posts Endpoints', () => {
           .then(() => {
             return supertest(app)
               .get('/api/blog-posts/')
-              .expect(200, testBlogPosts.filter((post) => post.id !== blogPostId));
+              .expect(200, testFullBlogPosts.filter((post) => post.id !== blogPostId));
           });
       });
 

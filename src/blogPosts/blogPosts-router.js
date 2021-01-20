@@ -12,10 +12,10 @@ blogPostsRouter.route('/')
   .get((req, res, next) => {
     const { authorId } = req.query;
 
-    return blogPostsService.getAllBlogPosts(req.app.get('db'), authorId)
+    return blogPostsService.getAllFullBlogPosts(req.app.get('db'), authorId)
       .then((results) => {
         return res
-          .json(results.map(sanitizeBlogPost));
+          .json(results.map(sanitizeFullBlogPost));
       })
       .catch(next);
   })

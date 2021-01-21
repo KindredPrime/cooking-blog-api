@@ -77,12 +77,20 @@ describe('Comments Endpoints', () => {
             .expect(200, testFullComments);
         });
 
-      it(`Responds with 200 and all full comments that match a given comment id`, () => {
+      it(`Responds with 200 and all full comments that match a given blog post id`, () => {
         const blogPostId = testBlogPosts[0].id;
         return supertest(app)
           .get('/api/comments')
           .query({ blogPostId })
           .expect(200, testFullComments.filter((comment) => comment.post_id === blogPostId));
+      });
+
+      it(`Responds with 200 and all full comments that match a given creator id`, () => {
+        const creatorId = testComments[0].creator_id;
+        return supertest(app)
+          .get('/api/comments')
+          .query({ creatorId })
+          .expect(200, testFullComments.filter((comment) => comment.creator_id === creatorId));
       });
     });
 

@@ -14,9 +14,9 @@ commentsRouter.route('/')
     * database, optionally filtered by a post_id.
   */
   .get((req, res, next) => {
-    const { blogPostId } = req.query;
+    const { blogPostId, creatorId } = req.query;
 
-    return commentsService.getAllFullComments(req.app.get('db'), blogPostId)
+    return commentsService.getAllFullComments(req.app.get('db'), blogPostId, creatorId)
       .then((comments) => {
         return res
           .json(comments.map(sanitizeFullComment));

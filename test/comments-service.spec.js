@@ -94,7 +94,7 @@ describe('Comments Service Object', () => {
     });
 
     it(
-      `getAllFullComments() returns all the comments, along with their creator's username and their blog post's title`,
+      `getAllFullComments() returns all full comments (including their creator's username and blog post's title)`,
       () => {
         return commentsService.getAllFullComments(db)
           .then((results) => {
@@ -102,15 +102,21 @@ describe('Comments Service Object', () => {
           });
       });
 
-    it(
-      `getAllFullComments(blogPostId) returns all comments with a matching post_id, along with their creator's username and their blog post's title`,
-      () => {
-        const blogPostId = testBlogPosts[0].id;
-        return commentsService.getAllFullComments(db, blogPostId)
-          .then((results) => {
-            expect(results).to.eql(testFullComments.filter((comment) => comment.post_id === blogPostId));
-          });
-      });
+    it(`getAllFullComments(blogPostId) returns all full comments with a matching post_id`, () => {
+      const blogPostId = testBlogPosts[0].id;
+      return commentsService.getAllFullComments(db, blogPostId)
+        .then((results) => {
+          expect(results).to.eql(testFullComments.filter((comment) => comment.post_id === blogPostId));
+        });
+    });
+
+    it(`getAllFullComments(creatorId) returns all full comments with a matching creator_id`, () => {
+      const creatorId = testFullComments[0].creator_id;
+      return commentsService.getAllFullComments(db, null, creatorId)
+        .then((results) => {
+          expect(results).to.eql(testFullComments.filter((comment) => comment.creator_id === creatorId));
+        });
+    });
 
     it(`getCommentById() returns the comment with the id`, () => {
       const id = testComments[0].id;
@@ -120,15 +126,13 @@ describe('Comments Service Object', () => {
         });
     });
 
-    it(
-      `getFullCommentById() returns the comment with the id, along with its creator's username and its blog post's title`,
-      () => {
-        const id = testComments[0].id;
-        return commentsService.getFullCommentById(db, id)
-          .then((result) => {
-            expect(result).to.eql(testFullComments[id-1]);
-          });
-      });
+    it(`getFullCommentById() returns the full comment with the id`, () => {
+      const id = testComments[0].id;
+      return commentsService.getFullCommentById(db, id)
+        .then((result) => {
+          expect(result).to.eql(testFullComments[id-1]);
+        });
+    });
 
     it(`deleteComment() deletes the comment from the 'comments' table`, () => {
       const id = 1;

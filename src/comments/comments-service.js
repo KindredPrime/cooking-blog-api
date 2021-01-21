@@ -16,15 +16,19 @@ const commentsService = {
       .leftJoin('users', 'comments.creator_id', 'users.id')
       .join('blog_posts', 'comments.post_id', 'blog_posts.id');
   },
-  getAllFullComments(db, blogPostId) {
-    const query = commentsService._joinTables(db);
+  getAllFullComments(db, blogPostId, creatorId) {
+    let query = commentsService._joinTables(db);
+    const whereConditions = {};
 
     if (blogPostId) {
-      return query
-        .where('post_id', blogPostId);
+      whereConditions['post_id'] = blogPostId;
     }
 
-    return query;
+    if (creatorId) {
+      whereConditions['creator_id'] = creatorId;
+    }
+
+    return query.where(whereConditions);
   },
   getCommentById(db, id) {
     return db.select('*').from('comments').where({ id }).first();
